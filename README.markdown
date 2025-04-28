@@ -36,7 +36,6 @@ image_search_engine/
 ## Limitations
 
 - Ground truth is restrictive, often leading to low precision.
-- Dataset imbalance: 26 `r_` images vs. 6 `r2_` images, which may bias results.
 
 ## Future Improvements
 
