@@ -122,7 +122,9 @@ def search_engine(descriptor_type, query_image_path, dataset_path, nombre_result
         image_requete = cv2.imread(query_image_path)
         if image_requete is None:
             raise ValueError("Failed to load query image.")
-        histogramme_requete = cv2.calcHist([image_requete], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256]).flatten()
+        histogramme_requete = cv2.calcHist([image_requete], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+
+        histogramme_requete = histogramme_requete.flatten()
         results = rechercher_images_similaires_histogram(index, histogramme_requete, nombre_resultats)
     elif descriptor_type == "grayscale_histogram":
         index = indexer_images_grayscale_histogram(dataset_path)
@@ -155,27 +157,34 @@ def evaluate_results(results, ground_truth):
     recall = true_positives / len(ground_truth) if ground_truth else 0
     return precision, recall
 
-# === Enhanced GUI with Tkinter ===
+# === Modern Black-and-White GUI with Tkinter ===
 
 class ImageSearchGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Image Search Engine")
-        self.root.geometry("1000x700")
-        self.root.configure(bg="#f0f2f5")  # Light gray background
-
-        # Main frame
-        self.main_frame = tk.Frame(root, bg="#f0f2f5")
-        self.main_frame.pack(pady=20, padx=20, fill="both", expand=True)
+        self.root.geometry("1200x700")
+        self.root.configure(bg="#1C2526")  # Dark background
 
         # Dataset path
         self.dataset_path = "dataset"
         if not os.path.exists(self.dataset_path):
             os.makedirs(self.dataset_path)
 
-        # === Descriptor Selection ===
-        self.descriptor_frame = tk.LabelFrame(self.main_frame, text="Select Descriptor", font=("Arial", 12, "bold"), bg="#ffffff", fg="#333333", padx=10, pady=10)
-        self.descriptor_frame.pack(fill="x", pady=10)
+        # Main layout: Sidebar (left) and Results (right)
+        self.sidebar = tk.Frame(root, bg="#1C2526", width=300)
+        self.sidebar.pack(side="left", fill="y", padx=10, pady=10)
+
+        self.main_area = tk.Frame(root, bg="#1C2526")
+        self.main_area.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+
+        # === Sidebar Content ===
+        # Title
+        tk.Label(self.sidebar, text="Image Search Engine", font=("Arial", 16, "bold"), fg="#FFFFFF", bg="#1C2526").pack(pady=(10, 20))
+
+        # Descriptor Selection
+        self.descriptor_frame = tk.LabelFrame(self.sidebar, text="Descriptors", font=("Arial", 12, "bold"), fg="#FFFFFF", bg="#1C2526", bd=1, relief="solid", labelanchor="n")
+        self.descriptor_frame.pack(fill="x", padx=10, pady=10)
 
         self.descriptor_var = tk.StringVar(value="color_histogram")
         descriptors = [
@@ -184,37 +193,37 @@ class ImageSearchGUI:
             ("Correlogram", "correlogram"),
             ("VGG16 (Deep Learning)", "vgg16")
         ]
-        for i, (text, value) in enumerate(descriptors):
+        for text, value in descriptors:
             tk.Radiobutton(
                 self.descriptor_frame, text=text, variable=self.descriptor_var, value=value,
-                font=("Arial", 10), bg="#ffffff", fg="#333333", selectcolor="#e6f3ff"
-            ).grid(row=i // 2, column=i % 2, sticky="w", padx=10, pady=5)
+                font=("Arial", 10), fg="#FFFFFF", bg="#1C2526", selectcolor="#333333", activebackground="#1C2526", activeforeground="#FFFFFF"
+            ).pack(anchor="w", padx=10, pady=2)
 
-        # === Query Image Section ===
-        self.query_frame = tk.Frame(self.main_frame, bg="#ffffff", bd=2, relief="groove")
-        self.query_frame.pack(fill="x", pady=10)
+        # Query Image Section
+        self.query_frame = tk.Frame(self.sidebar, bg="#1C2526", bd=1, relief="solid")
+        self.query_frame.pack(fill="x", padx=10, pady=10)
 
-        tk.Label(self.query_frame, text="Query Image", font=("Arial", 12, "bold"), bg="#ffffff", fg="#333333").pack(pady=5)
-        self.query_label = tk.Label(self.query_frame, text="No image selected", font=("Arial", 10), bg="#ffffff", fg="#666666")
+        tk.Label(self.query_frame, text="Query Image", font=("Arial", 12, "bold"), fg="#FFFFFF", bg="#1C2526").pack(pady=5)
+        self.query_label = tk.Label(self.query_frame, text="No image selected", font=("Arial", 10), fg="#D3D3D3", bg="#1C2526")
         self.query_label.pack(pady=5)
-        ttk.Button(self.query_frame, text="Upload Image", command=self.upload_query_image, style="TButton").pack(pady=5)
+        ttk.Button(self.query_frame, text="Upload Image", command=self.upload_query_image, style="Modern.TButton").pack(pady=5)
         self.query_image_path = None
 
-        # === Search Button ===
-        self.search_button = ttk.Button(self.main_frame, text="Search", command=self.search, style="TButton")
-        self.search_button.pack(pady=10)
+        # Search Button
+        ttk.Button(self.sidebar, text="Search", command=self.search, style="Modern.TButton").pack(pady=10)
 
-        # === Status Label ===
-        self.status_label = tk.Label(self.main_frame, text="", font=("Arial", 10, "italic"), bg="#f0f2f5", fg="#666666")
+        # Status Label
+        self.status_label = tk.Label(self.sidebar, text="", font=("Arial", 10, "italic"), fg="#D3D3D3", bg="#1C2526")
         self.status_label.pack(pady=5)
 
-        # === Results Display ===
-        self.result_frame = tk.LabelFrame(self.main_frame, text="Search Results", font=("Arial", 12, "bold"), bg="#ffffff", fg="#333333", padx=10, pady=10)
-        self.result_frame.pack(fill="both", expand=True, pady=10)
+        # === Main Area Content ===
+        # Results Display
+        self.result_frame = tk.LabelFrame(self.main_area, text="Search Results", font=("Arial", 14, "bold"), fg="#FFFFFF", bg="#1C2526", bd=1, relief="solid", labelanchor="n")
+        self.result_frame.pack(fill="both", expand=True, pady=(0, 10))
 
-        self.canvas = tk.Canvas(self.result_frame, bg="#ffffff")
+        self.canvas = tk.Canvas(self.result_frame, bg="#1C2526", highlightthickness=0)
         self.scrollbar = ttk.Scrollbar(self.result_frame, orient="vertical", command=self.canvas.yview)
-        self.scrollable_frame = tk.Frame(self.canvas, bg="#ffffff")
+        self.scrollable_frame = tk.Frame(self.canvas, bg="#1C2526")
 
         self.scrollable_frame.bind(
             "<Configure>",
@@ -227,29 +236,35 @@ class ImageSearchGUI:
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # === Performance and Evaluation ===
-        self.metrics_frame = tk.Frame(self.main_frame, bg="#f0f2f5")
-        self.metrics_frame.pack(fill="x", pady=10)
+        # Performance and Evaluation
+        self.metrics_frame = tk.Frame(self.main_area, bg="#1C2526")
+        self.metrics_frame.pack(fill="x", pady=5)
 
-        self.performance_label = tk.Label(self.metrics_frame, text="", font=("Arial", 10), bg="#f0f2f5", fg="#333333")
+        self.performance_label = tk.Label(self.metrics_frame, text="", font=("Arial", 10), fg="#FFFFFF", bg="#1C2526")
         self.performance_label.pack(side="left", padx=20)
-        self.evaluation_label = tk.Label(self.metrics_frame, text="", font=("Arial", 10), bg="#f0f2f5", fg="#333333")
+        self.evaluation_label = tk.Label(self.metrics_frame, text="", font=("Arial", 10), fg="#FFFFFF", bg="#1C2526")
         self.evaluation_label.pack(side="right", padx=20)
 
         # Configure ttk style
         style = ttk.Style()
-        style.configure("TButton", font=("Arial", 10), padding=10, background="#4a90e2", foreground="#ffffff")
-        style.map("TButton", background=[("active", "#357abd")])
+        style.configure("Modern.TButton", font=("Arial", 10), padding=10, background="#FFFFFF", foreground="#000000")
+        style.map("Modern.TButton", background=[("active", "#000000")], foreground=[("active", "#FFFFFF")])
+
+        # Bind mouse wheel to canvas scrolling
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def upload_query_image(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         if file_path:
             self.query_image_path = file_path
-            self.query_label.config(text=f"{os.path.basename(file_path)}")
+            self.query_label.config(text=f"{os.path.basename(file_path)}", fg="#FFFFFF")
             img = Image.open(file_path)
-            img = img.resize((120, 120), Image.Resampling.LANCZOS)
+            img = img.resize((150, 150), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(img)
-            self.query_label.config(image=photo, compound="top", bg="#ffffff")
+            self.query_label.config(image=photo, compound="top", bg="#1C2526")
             self.query_label.image = photo
             self.status_label.config(text="Query image loaded.")
 
@@ -272,27 +287,30 @@ class ImageSearchGUI:
             for widget in self.scrollable_frame.winfo_children():
                 widget.destroy()
 
-            # Display results
+            # Get ground truth using full filename without extension
+            query_filename = os.path.basename(self.query_image_path)
+            query_name_without_ext = os.path.splitext(query_filename)[0]  # e.g., "r2_140_100"
+            ground_truth = [f for f in os.listdir(self.dataset_path) if os.path.splitext(f)[0] == query_name_without_ext]
+
+            # Display results in a grid (3 columns)
             for i, (nom_fichier, distance) in enumerate(results):
-                frame = tk.Frame(self.scrollable_frame, bg="#ffffff", bd=2, relief="groove")
-                frame.grid(row=0, column=i, padx=10, pady=10)
+                frame = tk.Frame(self.scrollable_frame, bg="#1C2526", bd=1, relief="solid")
+                frame.grid(row=i // 3, column=i % 3, padx=10, pady=10, sticky="nsew")
 
                 img_path = os.path.join(self.dataset_path, nom_fichier)
                 img = Image.open(img_path)
-                img = img.resize((120, 120), Image.Resampling.LANCZOS)
+                img = img.resize((150, 150), Image.Resampling.LANCZOS)
                 photo = ImageTk.PhotoImage(img)
-                label = tk.Label(frame, image=photo, bg="#ffffff")
+                label = tk.Label(frame, image=photo, bg="#1C2526", bd=2, relief="flat")
                 label.image = photo
-                label.pack()
+                label.pack(pady=(5, 0))
 
-                tk.Label(frame, text=f"{nom_fichier}\nDist: {distance:.4f}", font=("Arial", 9), bg="#ffffff", fg="#333333").pack()
+                tk.Label(frame, text=f"{nom_fichier}\nDist: {distance:.4f}", font=("Arial", 9), fg="#FFFFFF", bg="#1C2526").pack(pady=5)
 
             # Performance
             self.performance_label.config(text=f"Search Time: {search_time:.2f} seconds")
 
             # Evaluation
-            base_name = os.path.basename(self.query_image_path).split('_')[0]
-            ground_truth = [f for f in os.listdir(self.dataset_path) if f.startswith(base_name)]
             precision, recall = evaluate_results(results, ground_truth)
             self.evaluation_label.config(text=f"Precision: {precision:.2f}, Recall: {recall:.2f}")
 
